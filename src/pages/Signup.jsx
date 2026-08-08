@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authClient, getDb } from '../lib/auth';
+import { authClient } from '../lib/auth';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -37,10 +37,7 @@ export default function Signup() {
       if (signUpError) {
         setError(signUpError.message || 'Erro ao criar conta.');
       } else {
-        const db = getDb();
-        await db`INSERT INTO nutricionistas (id, nome, email) VALUES (${data.user.id}, ${name}, ${email})`;
-        
-        console.log("Nutricionista criado com sucesso no Neon Auth e Banco de Dados.");
+        console.log("Nutricionista criado com sucesso no Neon Auth e sincronizado no Banco de Dados via Trigger.");
         navigate('/dashboard');
       }
     } catch (err) {
