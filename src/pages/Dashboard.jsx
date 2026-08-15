@@ -114,13 +114,19 @@ export default function Dashboard({ user }) {
   }, [loadDashboardData]);
 
   // Formatar data em português
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const parts = dateStr.split('T')[0].split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  const formatDate = (val) => {
+    if (!val) return '';
+    try {
+      if (val instanceof Date) return val.toLocaleDateString('pt-BR');
+      const str = String(val);
+      const parts = str.split('T')[0].split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return new Date(val).toLocaleDateString('pt-BR');
+    } catch {
+      return String(val);
     }
-    return new Date(dateStr).toLocaleDateString('pt-BR');
   };
 
   const getGreetingDate = () => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, 
   User, 
@@ -13,7 +13,6 @@ import {
   TrendingUp, 
   Minus,
   Edit3, 
-  CheckCircle2, 
   X, 
   Save,
   LineChart,
@@ -23,12 +22,7 @@ import {
   Sparkles,
   HeartPulse,
   Utensils,
-  Droplets,
-  Moon,
-  Sun,
   Dumbbell,
-  FileText,
-  ShieldAlert,
   AlertTriangle
 } from 'lucide-react';
 import Layout from '../components/Layout';
@@ -57,6 +51,33 @@ export default function PacientePerfil({ user }) {
     observacoes: '',
     proximo_retorno: ''
   });
+
+  // Funções seguras de tratamento de datas
+  const toISODateString = (val) => {
+    if (!val) return '';
+    if (val instanceof Date) {
+      return val.toISOString().split('T')[0];
+    }
+    return String(val).split('T')[0];
+  };
+
+  const formatDate = (val) => {
+    if (!val) return 'Não informado';
+    try {
+      if (val instanceof Date) {
+        return val.toLocaleDateString('pt-BR');
+      }
+      const str = String(val);
+      const dateOnly = str.split('T')[0];
+      const parts = dateOnly.split('-');
+      if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      }
+      return new Date(val).toLocaleDateString('pt-BR');
+    } catch {
+      return String(val);
+    }
+  };
 
   // Função auxiliar para normalizar arrays do Postgres
   const parseArrayField = (val) => {
@@ -110,20 +131,11 @@ export default function PacientePerfil({ user }) {
     }
   }, [id, fetchPacienteDetails]);
 
-  // Formatação de data em português
-  const formatDate = (dateStr) => {
-    if (!dateStr) return 'Não informado';
-    const parts = dateStr.split('T')[0].split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return new Date(dateStr).toLocaleDateString('pt-BR');
-  };
-
   // Cálculo de idade
   const idade = useMemo(() => {
     if (!paciente?.data_nascimento) return null;
     const birth = new Date(paciente.data_nascimento);
+    if (isNaN(birth.getTime())) return null;
     const today = new Date();
     let age = today.getFullYear() - birth.getFullYear();
     const m = today.getMonth() - birth.getMonth();
@@ -147,7 +159,7 @@ export default function PacientePerfil({ user }) {
     // Ponto 0: Peso inicial no cadastro
     if (paciente.peso_inicial) {
       points.push({
-        data: paciente.created_at ? paciente.created_at.split('T')[0] : 'Início',
+        data: paciente.created_at ? toISODateString(paciente.created_at) : 'Início',
         label: 'Início',
         peso: parseFloat(paciente.peso_inicial),
         gordura: null,
@@ -161,7 +173,7 @@ export default function PacientePerfil({ user }) {
     consultas.forEach((c, index) => {
       points.push({
         id: c.id,
-        data: c.data_consulta ? c.data_consulta.split('T')[0] : '',
+        data: c.data_consulta ? toISODateString(c.data_consulta) : '',
         label: `Consulta ${index + 1}`,
         peso: c.peso ? parseFloat(c.peso) : null,
         gordura: c.percentual_gordura ? parseFloat(c.percentual_gordura) : null,

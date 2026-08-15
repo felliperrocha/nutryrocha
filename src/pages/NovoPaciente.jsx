@@ -71,19 +71,41 @@ export default function NovoPaciente({ user, isEdit = false }) {
           return;
         }
         const p = res[0];
+        const toISODate = (val) => {
+          if (!val) return '';
+          if (val instanceof Date) return val.toISOString().split('T')[0];
+          return String(val).split('T')[0];
+        };
+        const parseArray = (val) => {
+          if (!val) return [];
+          if (Array.isArray(val)) return val;
+          if (typeof val === 'string') {
+            if (val.startsWith('{') && val.endsWith('}')) {
+              return val.slice(1, -1).split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+            }
+            try {
+              const parsed = JSON.parse(val);
+              if (Array.isArray(parsed)) return parsed;
+            } catch {
+              return [val];
+            }
+          }
+          return [];
+        };
+
         setNome(p.nome || '');
-        setDataNascimento(p.data_nascimento ? p.data_nascimento.split('T')[0] : '');
+        setDataNascimento(toISODate(p.data_nascimento));
         setSexo(p.sexo || '');
         setWhatsapp(p.whatsapp || '');
         setEmail(p.email || '');
         setPesoInicial(p.peso_inicial ? String(p.peso_inicial) : '');
         setAltura(p.altura ? (p.altura < 3 ? String(Math.round(p.altura * 100)) : String(p.altura)) : '');
-        setObjetivos(Array.isArray(p.objetivos) ? p.objetivos : []);
+        setObjetivos(parseArray(p.objetivos));
         setObjetivoTexto(p.objetivo_texto || '');
         setNivelAtividade(p.nivel_atividade || '');
-        setPatologias(Array.isArray(p.patologias) ? p.patologias : []);
-        setRestricoes(Array.isArray(p.restricoes_alimentares) ? p.restricoes_alimentares : []);
-        setAlergias(Array.isArray(p.alergias) ? p.alergias : []);
+        setPatologias(parseArray(p.patologias));
+        setRestricoes(parseArray(p.restricoes_alimentares));
+        setAlergias(parseArray(p.alergias));
         setMedicamentos(p.medicamentos || '');
         setSuplementos(p.suplementos || '');
         setRefeicoesPorDia(p.refeicoes_por_dia ? String(p.refeicoes_por_dia) : '');
