@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
@@ -7,9 +7,8 @@ import {
   ChevronRight, 
   Calendar, 
   Target, 
-  Phone, 
-  Mail,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { sql } from '../lib/db';
@@ -21,47 +20,58 @@ export default function Pacientes({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function fetchPacientes() {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchPacientes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        let nutId = user?.id;
-        if (!nutId && user?.email) {
-          const res = await sql`SELECT id FROM nutricionistas WHERE email = ${user.email} LIMIT 1`;
-          if (res.length > 0) nutId = res[0].id;
+      // 1. Obter nutricionista ID de forma resiliente
+      let nutId = null;
+      if (user?.email) {
+        const nutRes = await sql`
+          SELECT id FROM nutricionistas WHERE email = ${user.email} OR id = ${user.id} LIMIT 1
+        `;
+        if (nutRes && nutRes.length > 0) {
+          nutId = nutRes[0].id;
         }
-
-        if (nutId) {
-          const list = await sql`
-            SELECT 
-              p.id,
-              p.nome,
-              p.email,
-              p.whatsapp,
-              p.objetivos,
-              p.objetivo_texto,
-              p.created_at,
-              MAX(c.data_consulta) AS ultima_consulta
-            FROM pacientes p
-            LEFT JOIN consultas c ON c.paciente_id = p.id
-            WHERE p.nutricionista_id = ${nutId}
-            GROUP BY p.id, p.nome, p.email, p.whatsapp, p.objetivos, p.objetivo_texto, p.created_at
-            ORDER BY p.nome ASC
-          `;
-          setPacientes(list || []);
-        }
-      } catch (err) {
-        console.error('Erro ao buscar pacientes:', err);
-        setError('Erro ao carregar lista de pacientes.');
-      } finally {
-        setLoading(false);
       }
-    }
+      if (!nutId && user?.id) {
+        nutId = user.id;
+      }
 
-    fetchPacientes();
+      if (!nutId) {
+        throw new Error('Sessão expirada ou nutricionista não identificada.');
+      }
+
+      // 2. Consulta ultra-otimizada sem GROUP BY em colunas de array
+      const list = await sql`
+        SELECT 
+          p.id,
+          p.nome,
+          p.email,
+          p.whatsapp,
+          p.objetivos,
+          p.objetivo_texto,
+          p.created_at,
+          (SELECT MAX(c.data_consulta) FROM consultas c WHERE c.paciente_id = p.id) AS ultima_consulta
+        FROM pacientes p
+        WHERE p.nutricionista_id = ${nutId}
+           OR p.nutricionista_id IN (SELECT id FROM nutricionistas WHERE email = ${user?.email})
+        ORDER BY p.nome ASC
+      `;
+
+      setPacientes(list || []);
+    } catch (err) {
+      console.error('Erro ao buscar lista de pacientes:', err);
+      setError('Erro ao carregar a lista de pacientes. Verifique sua conexão e tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    fetchPacientes();
+  }, [fetchPacientes]);
 
   const filteredPacientes = pacientes.filter(p => 
     p.nome?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -69,7 +79,7 @@ export default function Pacientes({ user }) {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Nenhuma consulta';
-    const parts = dateStr.split('T')[0].split('-');
+    const parts = String(dateStr).split('T')[0].split('-');
     if (parts.length === 3) {
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
@@ -130,7 +140,8 @@ export default function Pacientes({ user }) {
         {error && (
           <div className="dashboard-alert-error" style={{ marginBottom: '1.5rem' }}>
             <AlertCircle size={20} />
-            <span>{error}</span>
+            <span style={{ flex: 1 }}>{error}</span>
+            <button onClick={fetchPacientes} className="btn-retry">Tentar novamente</button>
           </div>
         )}
 
@@ -169,7 +180,7 @@ export default function Pacientes({ user }) {
                 </div>
                 <h4 className="empty-state-title">Nenhum paciente cadastrado ainda</h4>
                 <p className="empty-state-subtitle">
-                  Comece cadastrando seu primeiro paciente para registrar consultas e montar planos alimentares.
+                  Comece cadastrando seu primeiro paciente para registrar consultas e acompanhar a evolução física.
                 </p>
                 <button 
                   type="button" 
