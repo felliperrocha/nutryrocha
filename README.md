@@ -1,6 +1,6 @@
 # Nutry+ 🥗✨
 
-**Nutry+** é um sistema completo e moderno de gestão clínica para nutricionistas, projetado para simplificar o acompanhamento de pacientes, o registro de consultas e a prescrição de planos alimentares com alta performance e segurança.
+**Nutry+** é um sistema completo e moderno de gestão clínica para nutricionistas, projetado para simplificar o acompanhamento de pacientes, o registro de consultas, a análise de evolução física e a prescrição de planos alimentares com alta performance e segurança.
 
 ---
 
@@ -17,10 +17,16 @@
 - **Alerta de Pacientes Sem Retorno**: Listagem de pacientes cuja última consulta ocorreu há mais de 30 dias e que não possuem retorno agendado, com link direto para o prontuário.
 - **Estado Dinâmico**: Notificação amigável quando todos os pacientes estiverem em dia.
 
-### 👥 3. Gestão de Pacientes & Prontuário
-- **Listagem e Busca Rápida**: Filtragem por nome, email ou WhatsApp.
-- **Perfil Completo do Paciente**: Dados antropométricos (peso inicial, altura), objetivos, nível de atividade física, restrições e patologias.
-- **Histórico de Consultas**: Acompanhamento de evolução física (peso, % gordura, circunferências) e agendamento de retornos.
+### 👥 3. Gestão e Cadastro de Pacientes (3 Abas)
+- **Aba Pessoal**: Nome, idade calculada automaticamente, sexo, telefone/WhatsApp formatados e email.
+- **Aba Clínico**: Peso, altura, cálculo automático de **IMC** com classificação clínica, objetivos em tags, nível de atividade física, patologias, restrições e alergias (com suporte a "Nenhum" e tags personalizadas), medicamentos e suplementos.
+- **Aba Hábitos**: Refeições ao dia, quantidade de água em litros, horários de acordar e dormir com conversão inteligente de horas (`6` → `06:00`), prática de atividade física e observações.
+- **Edição Completa de Paciente**: Pré-carregamento dos dados para atualização rápida no banco.
+
+### 📈 4. Prontuário & Painel Visual de Evolução
+- **Gráfico SVG Interativo de Evolução**: Curva temporal de peso e percentual de gordura.
+- **Cards de Comparação**: Peso Inicial vs. Peso Atual, Variação Total em kg e percentual, IMC Atual.
+- **Registro Rápido de Consultas**: Modal para adicionar novas consultas com data, medidas e próximo retorno diretamente pelo prontuário.
 
 ---
 
@@ -50,7 +56,8 @@ Nutry+/
 │   │   ├── Signup.jsx          # Tela de cadastro de nutricionistas
 │   │   ├── Dashboard.jsx       # Painel principal de controle
 │   │   ├── Pacientes.jsx       # Listagem e busca de pacientes
-│   │   └── PacientePerfil.jsx  # Prontuário e histórico clínico
+│   │   ├── NovoPaciente.jsx    # Cadastro e edição de paciente (3 abas)
+│   │   └── PacientePerfil.jsx  # Prontuário, evolução visual e consultas
 │   ├── App.jsx             # Roteamento e proteção de rotas
 │   ├── index.css           # Design System global e temas
 │   └── main.jsx            # Ponto de entrada React
