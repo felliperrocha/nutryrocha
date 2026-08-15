@@ -3,6 +3,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import Pacientes from './pages/Pacientes';
+import NovoPaciente from './pages/NovoPaciente';
 import PacientePerfil from './pages/PacientePerfil';
 import { authClient } from './lib/auth';
 
@@ -33,6 +34,10 @@ function App() {
         <Route 
           path="/pacientes" 
           element={user ? <Pacientes user={user} /> : <Navigate to="/login" replace />} 
+        />
+        <Route 
+          path="/pacientes/novo" 
+          element={user ? <NovoPaciente user={user} /> : <Navigate to="/login" replace />} 
         />
         <Route 
           path="/pacientes/:id" 
