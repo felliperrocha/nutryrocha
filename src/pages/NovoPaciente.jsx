@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { 
   User, 
   Activity, 
@@ -11,17 +11,18 @@ import {
   X, 
   AlertCircle, 
   Clock, 
-  Droplet, 
   Save,
   CheckCircle2
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { sql } from '../lib/db';
 
-export default function NovoPaciente({ user }) {
+export default function NovoPaciente({ user, isEdit = false }) {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('pessoal');
   const [saving, setSaving] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
@@ -57,7 +58,50 @@ export default function NovoPaciente({ user }) {
   const [atividadeDescricao, setAtividadeDescricao] = useState('');
   const [observacoes, setObservacoes] = useState('');
 
-  // --- Funções Auxiliares de Formatação e Cálculos ---
+  // Carregar dados para edição
+  useEffect(() => {
+    async function carregarDadosEdicao() {
+      if (!isEdit || !id) return;
+      try {
+        setInitialLoading(true);
+        setError(null);
+        const res = await sql`SELECT * FROM pacientes WHERE id = ${id} LIMIT 1`;
+        if (res.length === 0) {
+          setError('Paciente não encontrado para edição.');
+          return;
+        }
+        const p = res[0];
+        setNome(p.nome || '');
+        setDataNascimento(p.data_nascimento ? p.data_nascimento.split('T')[0] : '');
+        setSexo(p.sexo || '');
+        setWhatsapp(p.whatsapp || '');
+        setEmail(p.email || '');
+        setPesoInicial(p.peso_inicial ? String(p.peso_inicial) : '');
+        setAltura(p.altura ? (p.altura < 3 ? String(Math.round(p.altura * 100)) : String(p.altura)) : '');
+        setObjetivos(Array.isArray(p.objetivos) ? p.objetivos : []);
+        setObjetivoTexto(p.objetivo_texto || '');
+        setNivelAtividade(p.nivel_atividade || '');
+        setPatologias(Array.isArray(p.patologias) ? p.patologias : []);
+        setRestricoes(Array.isArray(p.restricoes_alimentares) ? p.restricoes_alimentares : []);
+        setAlergias(Array.isArray(p.alergias) ? p.alergias : []);
+        setMedicamentos(p.medicamentos || '');
+        setSuplementos(p.suplementos || '');
+        setRefeicoesPorDia(p.refeicoes_por_dia ? String(p.refeicoes_por_dia) : '');
+        setHorarioAcorda(p.horario_acorda || '');
+        setHorarioDorme(p.horario_dorme || '');
+        setLitrosAgua(p.litros_agua ? String(p.litros_agua) : '');
+        setPraticaAtividade(Boolean(p.atividade_fisica));
+        setAtividadeDescricao(p.atividade_fisica_descricao || '');
+        setObservacoes(p.observacoes || '');
+      } catch (err) {
+        console.error('Erro ao carregar paciente para edição:', err);
+        setError('Não foi possível carregar os dados do paciente.');
+      } finally {
+        setInitialLoading(false);
+      }
+    }
+    carregarDadosEdicao();
+  }, [isEdit, id]);
 
   // Cálculo da idade
   const idade = useMemo(() => {
@@ -83,7 +127,7 @@ export default function NovoPaciente({ user }) {
     return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
   };
 
-  // Conversão inteligente de formato de hora (ex: 6 -> 06:00, 630 -> 06:30, 2230 -> 22:30)
+  // Conversão de formato de hora
   const formatTime = (value) => {
     if (!value) return '';
     const clean = value.replace(/\D/g, '');
@@ -119,7 +163,6 @@ export default function NovoPaciente({ user }) {
       return null;
     }
 
-    // Se a altura for informada em cm (ex: 175), converter para metros (1.75)
     const alturaMetros = alturaNum > 3 ? alturaNum / 100 : alturaNum;
     if (alturaMetros <= 0) return null;
 
@@ -156,7 +199,6 @@ export default function NovoPaciente({ user }) {
     };
   }, [pesoInicial, altura]);
 
-  // Gestão de Múltipla Escolha com opção "Nenhum"
   const toggleChip = (list, setList, item) => {
     if (item === 'Nenhum') {
       if (list.includes('Nenhum')) {
@@ -186,7 +228,7 @@ export default function NovoPaciente({ user }) {
     setCustomVal('');
   };
 
-  // --- Submissão do Formulário ---
+  // Submissão do Formulário (Criação ou Edição)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -200,7 +242,6 @@ export default function NovoPaciente({ user }) {
     setSaving(true);
 
     try {
-      // 1. Obter nutricionista ID
       let nutId = user?.id;
       if (!nutId && user?.email) {
         const nutRes = await sql`SELECT id FROM nutricionistas WHERE email = ${user.email} LIMIT 1`;
@@ -214,77 +255,111 @@ export default function NovoPaciente({ user }) {
       const pesoVal = pesoInicial ? parseFloat(pesoInicial) : null;
       let alturaVal = altura ? parseFloat(altura) : null;
       if (alturaVal && alturaVal > 3) {
-        // Se informado em cm (ex: 175 cm), converter para metros no banco
         alturaVal = parseFloat((alturaVal / 100).toFixed(2));
       }
       const litrosVal = litrosAgua ? parseFloat(litrosAgua) : null;
       const refeicoesVal = refeicoesPorDia ? parseInt(refeicoesPorDia, 10) : null;
 
-      // Inserir paciente no banco Neon
-      const inserted = await sql`
-        INSERT INTO pacientes (
-          nutricionista_id,
-          nome,
-          data_nascimento,
-          sexo,
-          whatsapp,
-          email,
-          peso_inicial,
-          altura,
-          objetivos,
-          objetivo_texto,
-          nivel_atividade,
-          patologias,
-          restricoes_alimentares,
-          alergias,
-          medicamentos,
-          suplementos,
-          refeicoes_por_dia,
-          horario_acorda,
-          horario_dorme,
-          litros_agua,
-          atividade_fisica,
-          atividade_fisica_descricao,
-          observacoes
-        ) VALUES (
-          ${nutId},
-          ${nome.trim()},
-          ${dataNascimento || null},
-          ${sexo || null},
-          ${whatsapp || telefone || null},
-          ${email.trim() || null},
-          ${pesoVal},
-          ${alturaVal},
-          ${objetivos.length > 0 ? objetivos : null},
-          ${objetivoTexto.trim() || null},
-          ${nivelAtividade || null},
-          ${patologias.length > 0 ? patologias : null},
-          ${restricoes.length > 0 ? restricoes : null},
-          ${alergias.length > 0 ? alergias : null},
-          ${medicamentos.trim() || null},
-          ${suplementos.trim() || null},
-          ${refeicoesVal},
-          ${horarioAcorda.trim() || null},
-          ${horarioDorme.trim() || null},
-          ${litrosVal},
-          ${praticaAtividade},
-          ${praticaAtividade ? atividadeDescricao.trim() : null},
-          ${observacoes.trim() || null}
-        )
-        RETURNING id
-      `;
+      if (isEdit && id) {
+        // Atualizar dados existentes do paciente
+        await sql`
+          UPDATE pacientes SET
+            nome = ${nome.trim()},
+            data_nascimento = ${dataNascimento || null},
+            sexo = ${sexo || null},
+            whatsapp = ${whatsapp || telefone || null},
+            email = ${email.trim() || null},
+            peso_inicial = ${pesoVal},
+            altura = ${alturaVal},
+            objetivos = ${objetivos.length > 0 ? objetivos : null},
+            objetivo_texto = ${objetivoTexto.trim() || null},
+            nivel_atividade = ${nivelAtividade || null},
+            patologias = ${patologias.length > 0 ? patologias : null},
+            restricoes_alimentares = ${restricoes.length > 0 ? restricoes : null},
+            alergias = ${alergias.length > 0 ? alergias : null},
+            medicamentos = ${medicamentos.trim() || null},
+            suplementos = ${suplementos.trim() || null},
+            refeicoes_por_dia = ${refeicoesVal},
+            horario_acorda = ${horarioAcorda.trim() || null},
+            horario_dorme = ${horarioDorme.trim() || null},
+            litros_agua = ${litrosVal},
+            atividade_fisica = ${praticaAtividade},
+            atividade_fisica_descricao = ${praticaAtividade ? atividadeDescricao.trim() : null},
+            observacoes = ${observacoes.trim() || null}
+          WHERE id = ${id} AND nutricionista_id = ${nutId}
+        `;
 
-      if (inserted && inserted.length > 0) {
-        const newPatientId = inserted[0].id;
-        setSuccessMessage('Paciente cadastrado com sucesso!');
+        setSuccessMessage('Dados do paciente atualizados com sucesso!');
         setTimeout(() => {
-          navigate(`/pacientes/${newPatientId}`);
+          navigate(`/pacientes/${id}`);
         }, 800);
       } else {
-        throw new Error('Falha ao registrar paciente no banco de dados.');
+        // Criar novo paciente
+        const inserted = await sql`
+          INSERT INTO pacientes (
+            nutricionista_id,
+            nome,
+            data_nascimento,
+            sexo,
+            whatsapp,
+            email,
+            peso_inicial,
+            altura,
+            objetivos,
+            objetivo_texto,
+            nivel_atividade,
+            patologias,
+            restricoes_alimentares,
+            alergias,
+            medicamentos,
+            suplementos,
+            refeicoes_por_dia,
+            horario_acorda,
+            horario_dorme,
+            litros_agua,
+            atividade_fisica,
+            atividade_fisica_descricao,
+            observacoes
+          ) VALUES (
+            ${nutId},
+            ${nome.trim()},
+            ${dataNascimento || null},
+            ${sexo || null},
+            ${whatsapp || telefone || null},
+            ${email.trim() || null},
+            ${pesoVal},
+            ${alturaVal},
+            ${objetivos.length > 0 ? objetivos : null},
+            ${objetivoTexto.trim() || null},
+            ${nivelAtividade || null},
+            ${patologias.length > 0 ? patologias : null},
+            ${restricoes.length > 0 ? restricoes : null},
+            ${alergias.length > 0 ? alergias : null},
+            ${medicamentos.trim() || null},
+            ${suplementos.trim() || null},
+            ${refeicoesVal},
+            ${horarioAcorda.trim() || null},
+            ${horarioDorme.trim() || null},
+            ${litrosVal},
+            ${praticaAtividade},
+            ${praticaAtividade ? atividadeDescricao.trim() : null},
+            ${observacoes.trim() || null}
+          )
+          RETURNING id
+        `;
+
+        if (inserted && inserted.length > 0) {
+          const newPatientId = inserted[0].id;
+          setSuccessMessage('Paciente cadastrado com sucesso!');
+          setTimeout(() => {
+            navigate(`/pacientes/${newPatientId}`);
+          }, 800);
+        } else {
+          throw new Error('Falha ao registrar paciente no banco de dados.');
+        }
       }
     } catch (err) {
-      console.error('Erro ao cadastrar paciente:', err);
+      console.error('Erro ao salvar paciente:', err);
       setError(err.message || 'Ocorreu um erro ao salvar o paciente. Tente novamente.');
     } finally {
       setSaving(false);
@@ -335,25 +410,44 @@ export default function NovoPaciente({ user }) {
     'Frutos do mar'
   ];
 
+  if (initialLoading) {
+    return (
+      <Layout user={user}>
+        <div className="dashboard-content">
+          <div className="stat-card">
+            <div className="skeleton-list">
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout user={user}>
       <div className="dashboard-content">
-        {/* Topo com botão voltar */}
         <div style={{ marginBottom: '1.25rem' }}>
           <button 
             type="button"
-            onClick={() => navigate('/pacientes')} 
+            onClick={() => navigate(isEdit && id ? `/pacientes/${id}` : '/pacientes')} 
             className="btn-back"
           >
             <ArrowLeft size={18} />
-            <span>Voltar para Pacientes</span>
+            <span>{isEdit ? 'Voltar para Prontuário' : 'Voltar para Pacientes'}</span>
           </button>
         </div>
 
         <div className="form-header-title">
-          <h1 className="dashboard-greeting">Novo Paciente</h1>
+          <h1 className="dashboard-greeting">
+            {isEdit ? 'Editar Paciente' : 'Novo Paciente'}
+          </h1>
           <p className="dashboard-subtext">
-            Preencha os dados cadastrais, clínicos e hábitos para criar o prontuário.
+            {isEdit 
+              ? 'Atualize as informações cadastrais, clínicas e os hábitos do paciente.' 
+              : 'Preencha os dados cadastrais, clínicos e hábitos para criar o prontuário.'}
           </p>
         </div>
 
@@ -372,7 +466,6 @@ export default function NovoPaciente({ user }) {
         )}
 
         <div className="patient-form-card">
-          {/* Navegação por Abas */}
           <div className="form-tabs-header">
             <button
               type="button"
@@ -403,9 +496,7 @@ export default function NovoPaciente({ user }) {
           </div>
 
           <form onSubmit={handleSubmit} className="patient-form-body">
-            {/* =========================================================================
-                ABA 1: DADOS PESSOAIS
-               ========================================================================= */}
+            {/* ABA 1: DADOS PESSOAIS */}
             {activeTab === 'pessoal' && (
               <div className="tab-pane">
                 <div className="form-grid-2">
@@ -507,9 +598,7 @@ export default function NovoPaciente({ user }) {
               </div>
             )}
 
-            {/* =========================================================================
-                ABA 2: DADOS CLÍNICOS
-               ========================================================================= */}
+            {/* ABA 2: DADOS CLÍNICOS */}
             {activeTab === 'clinico' && (
               <div className="tab-pane">
                 <div className="form-grid-3">
@@ -562,7 +651,6 @@ export default function NovoPaciente({ user }) {
                   </div>
                 </div>
 
-                {/* Objetivos */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label className="form-label">Objetivo principal (seleção múltipla)</label>
                   <div className="chips-container">
@@ -588,7 +676,6 @@ export default function NovoPaciente({ user }) {
                   />
                 </div>
 
-                {/* Nível de atividade */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label className="form-label">Nível de atividade física</label>
                   <div className="radio-group-pills">
@@ -605,7 +692,6 @@ export default function NovoPaciente({ user }) {
                   </div>
                 </div>
 
-                {/* Patologias */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label className="form-label">Patologias ou condições de saúde</label>
                   <div className="chips-container">
@@ -659,7 +745,6 @@ export default function NovoPaciente({ user }) {
                   </div>
                 </div>
 
-                {/* Restrições Alimentares */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label className="form-label">Restrições alimentares</label>
                   <div className="chips-container">
@@ -713,7 +798,6 @@ export default function NovoPaciente({ user }) {
                   </div>
                 </div>
 
-                {/* Alergias Alimentares */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label className="form-label">Alergias alimentares</label>
                   <div className="chips-container">
@@ -814,9 +898,7 @@ export default function NovoPaciente({ user }) {
               </div>
             )}
 
-            {/* =========================================================================
-                ABA 3: HÁBITOS E ROTINA
-               ========================================================================= */}
+            {/* ABA 3: HÁBITOS E ROTINA */}
             {activeTab === 'habitos' && (
               <div className="tab-pane">
                 <div className="form-grid-2">
@@ -881,7 +963,6 @@ export default function NovoPaciente({ user }) {
                   </div>
                 </div>
 
-                {/* Pratica Atividade Física */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label className="form-label">Pratica atividade física?</label>
                   <div className="radio-group-pills">
@@ -914,7 +995,6 @@ export default function NovoPaciente({ user }) {
                   )}
                 </div>
 
-                {/* Observações Gerais */}
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
                   <label className="form-label" htmlFor="observacoes">Observações gerais</label>
                   <textarea 
@@ -943,7 +1023,7 @@ export default function NovoPaciente({ user }) {
                     disabled={saving}
                   >
                     <Save size={18} />
-                    <span>{saving ? 'Salvando...' : 'Salvar Paciente'}</span>
+                    <span>{saving ? 'Salvando...' : (isEdit ? 'Salvar Alterações' : 'Salvar Paciente')}</span>
                   </button>
                 </div>
               </div>

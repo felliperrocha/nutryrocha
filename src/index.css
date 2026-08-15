@@ -28,6 +28,7 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -53,7 +54,7 @@ body {
 }
 
 /* ==========================================================================
-   Autenticação (Login / Signup)
+   Autenticação (Login / Cadastro)
    ========================================================================== */
 .auth-wrapper {
   display: flex;
@@ -739,7 +740,7 @@ body {
 }
 
 /* ==========================================================================
-   Tela de Listagem de Pacientes (Prompt 4)
+   Tela de Listagem de Pacientes
    ========================================================================== */
 .btn-novo-paciente {
   display: flex;
@@ -838,7 +839,7 @@ body {
 }
 
 /* ==========================================================================
-   Formulário de Cadastro de Paciente (3 Abas - Prompt 4)
+   Formulário de Cadastro e Edição de Paciente
    ========================================================================== */
 .form-header-title {
   margin-bottom: 1.5rem;
@@ -953,7 +954,7 @@ body {
   box-shadow: 0 0 0 1px var(--primary-color);
 }
 
-/* Inputs com Sufixo Integrado (kg, cm, litros) */
+/* Inputs com Sufixos Integrados */
 .input-with-suffix {
   position: relative;
   display: flex;
@@ -1128,7 +1129,7 @@ body {
   border-color: var(--primary-color);
 }
 
-/* Footer de Ações do Formulário */
+/* Footer do Formulário */
 .tab-actions-footer {
   display: flex;
   justify-content: space-between;
@@ -1204,114 +1205,57 @@ body {
 }
 
 /* ==========================================================================
-   Estado Vazio & Skeletons
+   Perfil do Paciente & Painel de Evolução Visual
    ========================================================================== */
-.empty-state-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1.5rem;
-  text-align: center;
-  background-color: var(--bg-color);
-  border-radius: var(--radius-md);
-  border: 1px dashed var(--border-color);
-}
-
-.empty-state-icon {
-  margin-bottom: 0.75rem;
-}
-
-.empty-state-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.empty-state-subtitle {
-  font-size: 0.875rem;
-  color: var(--text-muted);
-  margin-top: 0.3rem;
-  max-width: 420px;
-}
-
-.skeleton {
-  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-sm);
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.skeleton-stat {
-  height: 48px;
-  width: 120px;
-  margin-top: 0.5rem;
-}
-
-.skeleton-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.skeleton-row {
-  height: 64px;
-  width: 100%;
-  border-radius: var(--radius-md);
-}
-
-/* ==========================================================================
-   Páginas Auxiliares (Busca e Perfil)
-   ========================================================================== */
-.search-filter-bar {
+.profile-top-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
-.search-input-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background-color: var(--bg-color);
-  border: 1.5px solid var(--border-color);
-  padding: 0.7rem 1rem;
-  border-radius: var(--radius-md);
-  flex: 1;
-}
-
-.search-input {
-  border: none;
-  background: transparent;
-  outline: none;
-  font-size: 0.95rem;
-  width: 100%;
-  color: var(--text-main);
-}
-
-.btn-back {
+.btn-edit-patient {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: transparent;
-  border: none;
-  font-size: 0.95rem;
+  padding: 0.65rem 1.1rem;
+  background-color: var(--surface-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
   font-weight: 600;
-  color: var(--primary-dark);
+  color: var(--text-main);
   cursor: pointer;
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-sm);
   transition: all 0.2s ease;
 }
 
-.btn-back:hover {
+.btn-edit-patient:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-dark);
   background-color: var(--primary-soft);
+}
+
+.btn-nova-consulta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 180, 216, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-nova-consulta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 180, 216, 0.35);
 }
 
 .profile-container {
@@ -1332,16 +1276,17 @@ body {
 }
 
 .profile-avatar-large {
-  width: 70px;
-  height: 70px;
+  width: 72px;
+  height: 72px;
   border-radius: var(--radius-full);
   background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 800;
+  flex-shrink: 0;
 }
 
 .profile-header-details {
@@ -1351,7 +1296,7 @@ body {
 }
 
 .profile-name {
-  font-size: 1.6rem;
+  font-size: 1.65rem;
   font-weight: 800;
   color: var(--text-main);
 }
@@ -1372,6 +1317,190 @@ body {
   padding: 0.25rem 0.65rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-color);
+}
+
+/* Painel de Evolução */
+.evolution-panel-card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfd 100%);
+  border: 1.5px solid #dbeafe;
+}
+
+.evolution-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.metric-toggle-group {
+  display: flex;
+  background-color: var(--bg-color);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  gap: 0.25rem;
+}
+
+.metric-toggle-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.metric-toggle-btn.active {
+  background-color: white;
+  color: var(--primary-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.evolution-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.metric-mini-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.mini-card-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.mini-card-val {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.highlight-cyan {
+  color: var(--primary-dark);
+}
+
+.mini-card-diff-wrapper {
+  margin-top: 0.2rem;
+}
+
+.mini-card-diff {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.diff-negative {
+  background-color: var(--accent-emerald-light);
+  color: #065f46;
+}
+
+.diff-positive {
+  background-color: var(--accent-amber-light);
+  color: #92400e;
+}
+
+.diff-neutral {
+  color: var(--text-light);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* Gráfico de Evolução SVG */
+.evolution-chart-container {
+  margin-top: 1.5rem;
+  background-color: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+
+.evolution-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.chart-dot-group:hover circle:first-child {
+  r: 7.5;
+  stroke: #00b4d8;
+}
+
+.pulse-dot {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+.chart-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  background-color: var(--bg-color);
+  border-radius: var(--radius-md);
+  margin-top: 1.25rem;
+  border: 1px dashed var(--border-color);
+}
+
+.chart-empty-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-top: 0.5rem;
+}
+
+.chart-empty-subtitle {
+  font-size: 0.825rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  max-width: 400px;
+}
+
+.btn-add-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  background-color: var(--primary-light);
+  color: var(--primary-dark);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add-mini:hover {
+  background-color: var(--primary-dark);
+  color: white;
 }
 
 .profile-grid {
@@ -1402,12 +1531,16 @@ body {
 .info-val {
   color: var(--text-main);
   font-weight: 600;
+  text-align: right;
 }
 
 .consultas-history-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
 }
 
 .consulta-history-item {
@@ -1448,6 +1581,131 @@ body {
   margin-top: 0.25rem;
   font-style: italic;
   color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   Modal de Registro de Consulta
+   ========================================================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+}
+
+.modal-content {
+  background-color: var(--surface-color);
+  width: 100%;
+  max-width: 600px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+.modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-modal-cancel {
+  padding: 0.65rem 1.2rem;
+  background-color: transparent;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.btn-modal-cancel:hover {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
+.btn-modal-submit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.35rem;
+  background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 180, 216, 0.25);
+}
+
+.btn-modal-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 180, 216, 0.35);
+}
+
+.btn-modal-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 /* ==========================================================================
@@ -1462,6 +1720,9 @@ body {
   }
   .profile-grid {
     grid-template-columns: 1fr;
+  }
+  .evolution-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
   .form-grid-2, .form-grid-3 {
     grid-template-columns: 1fr;

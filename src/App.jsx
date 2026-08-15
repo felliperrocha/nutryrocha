@@ -40,6 +40,10 @@ function App() {
           element={user ? <NovoPaciente user={user} /> : <Navigate to="/login" replace />} 
         />
         <Route 
+          path="/pacientes/:id/editar" 
+          element={user ? <NovoPaciente user={user} isEdit={true} /> : <Navigate to="/login" replace />} 
+        />
+        <Route 
           path="/pacientes/:id" 
           element={user ? <PacientePerfil user={user} /> : <Navigate to="/login" replace />} 
         />
