@@ -20,7 +20,16 @@ import {
   Scale,
   Percent,
   Clock,
-  Sparkles
+  Sparkles,
+  HeartPulse,
+  Utensils,
+  Droplets,
+  Moon,
+  Sun,
+  Dumbbell,
+  FileText,
+  ShieldAlert,
+  AlertTriangle
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { sql } from '../lib/db';
@@ -33,6 +42,7 @@ export default function PacientePerfil({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewMetric, setViewMetric] = useState('peso'); // 'peso' | 'gordura'
+  const [activeInfoTab, setActiveInfoTab] = useState('clinico'); // 'clinico' | 'habitos' | 'consultas'
 
   // Estado do Modal de Nova Consulta
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -48,6 +58,24 @@ export default function PacientePerfil({ user }) {
     proximo_retorno: ''
   });
 
+  // Função auxiliar para normalizar arrays do Postgres
+  const parseArrayField = (val) => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      if (val.startsWith('{') && val.endsWith('}')) {
+        return val.slice(1, -1).split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+      }
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        return [val];
+      }
+    }
+    return [];
+  };
+
   const fetchPacienteDetails = useCallback(async () => {
     try {
       setLoading(true);
@@ -57,7 +85,7 @@ export default function PacientePerfil({ user }) {
         SELECT * FROM pacientes WHERE id = ${id} LIMIT 1
       `;
 
-      if (pacienteRes.length === 0) {
+      if (!pacienteRes || pacienteRes.length === 0) {
         setError('Paciente não encontrado.');
         return;
       }
@@ -105,6 +133,12 @@ export default function PacientePerfil({ user }) {
     return age >= 0 ? age : null;
   }, [paciente]);
 
+  // Dados do paciente tratados
+  const objetivosList = useMemo(() => parseArrayField(paciente?.objetivos), [paciente]);
+  const patologiasList = useMemo(() => parseArrayField(paciente?.patologias), [paciente]);
+  const restricoesList = useMemo(() => parseArrayField(paciente?.restricoes_alimentares), [paciente]);
+  const alergiasList = useMemo(() => parseArrayField(paciente?.alergias), [paciente]);
+
   // Dados cronológicos para o gráfico de evolução
   const timelineData = useMemo(() => {
     if (!paciente) return [];
@@ -114,7 +148,7 @@ export default function PacientePerfil({ user }) {
     if (paciente.peso_inicial) {
       points.push({
         data: paciente.created_at ? paciente.created_at.split('T')[0] : 'Início',
-        label: 'Início (Cadastro)',
+        label: 'Início',
         peso: parseFloat(paciente.peso_inicial),
         gordura: null,
         cintura: null,
@@ -147,7 +181,7 @@ export default function PacientePerfil({ user }) {
 
     const pesoInicial = paciente.peso_inicial ? parseFloat(paciente.peso_inicial) : null;
     
-    // Obter último peso registrado (seja da última consulta ou inicial)
+    // Obter último peso registrado
     const ultimasComPeso = consultas.filter(c => c.peso !== null && c.peso !== undefined);
     const pesoAtual = ultimasComPeso.length > 0 
       ? parseFloat(ultimasComPeso[ultimasComPeso.length - 1].peso) 
@@ -161,36 +195,36 @@ export default function PacientePerfil({ user }) {
       percentualPeso = (((pesoAtual - pesoInicial) / pesoInicial) * 100).toFixed(1);
     }
 
+    // IMC Inicial
+    const alturaMetros = paciente.altura ? (paciente.altura > 3 ? paciente.altura / 100 : paciente.altura) : null;
+    let imcInicial = null;
+    if (pesoInicial && alturaMetros && alturaMetros > 0) {
+      imcInicial = (pesoInicial / (alturaMetros * alturaMetros)).toFixed(1);
+    }
+
     // IMC Atual
     let imcAtual = null;
     let imcClassificacao = null;
     let imcCor = '';
-    const alturaMetros = paciente.altura ? (paciente.altura > 3 ? paciente.altura / 100 : paciente.altura) : null;
     if (pesoAtual && alturaMetros && alturaMetros > 0) {
       const imc = pesoAtual / (alturaMetros * alturaMetros);
       imcAtual = imc.toFixed(1);
       if (imc < 18.5) { imcClassificacao = 'Abaixo do peso'; imcCor = 'imc-amber'; }
       else if (imc < 25) { imcClassificacao = 'Peso normal'; imcCor = 'imc-green'; }
       else if (imc < 30) { imcClassificacao = 'Sobrepeso'; imcCor = 'imc-amber'; }
-      else if (imc < 35) { imcClassificacao = 'Obesidade I'; imcCor = 'imc-orange'; }
-      else { imcClassificacao = 'Obesidade II/III'; imcCor = 'imc-red'; }
+      else if (imc < 35) { imcClassificacao = 'Obesidade Grau I'; imcCor = 'imc-orange'; }
+      else { imcClassificacao = 'Obesidade Grau II/III'; imcCor = 'imc-red'; }
     }
-
-    // % de Gordura Inicial vs Atual
-    const consultasComGordura = consultas.filter(c => c.percentual_gordura !== null);
-    const gorduraAtual = consultasComGordura.length > 0 
-      ? parseFloat(consultasComGordura[consultasComGordura.length - 1].percentual_gordura) 
-      : null;
 
     return {
       pesoInicial,
       pesoAtual,
       diferencaPeso: diferencaPeso ? parseFloat(diferencaPeso) : null,
       percentualPeso,
+      imcInicial,
       imcAtual,
       imcClassificacao,
       imcCor,
-      gorduraAtual,
       totalConsultas: consultas.length
     };
   }, [paciente, consultas]);
@@ -248,7 +282,7 @@ export default function PacientePerfil({ user }) {
     }
   };
 
-  // Gerador de Gráfico SVG de Evolução
+  // Renderizador do Gráfico SVG de Evolução
   const renderChart = () => {
     const validPoints = timelineData.filter(p => viewMetric === 'peso' ? p.peso !== null : p.gordura !== null);
 
@@ -258,7 +292,7 @@ export default function PacientePerfil({ user }) {
           <LineChart size={36} color="#94a3b8" />
           <p className="chart-empty-title">Dados insuficientes para gerar o gráfico</p>
           <p className="chart-empty-subtitle">
-            Registre ao menos 2 consultas com peso para visualizar a curva de evolução do paciente.
+            Registre ao menos 2 avaliações com peso para visualizar a curva de evolução gráfica deste paciente.
           </p>
         </div>
       );
@@ -295,7 +329,7 @@ export default function PacientePerfil({ user }) {
         <svg viewBox={`0 0 ${width} ${height}`} className="evolution-svg">
           <defs>
             <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#00b4d8" stopOpacity="0.35" />
+              <stop offset="0%" stopColor="#00b4d8" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#00b4d8" stopOpacity="0.0" />
             </linearGradient>
           </defs>
@@ -341,7 +375,7 @@ export default function PacientePerfil({ user }) {
   return (
     <Layout user={user}>
       <div className="dashboard-content">
-        {/* Topo com Ações */}
+        {/* Barra superior de ações */}
         <div className="profile-top-actions">
           <button 
             type="button"
@@ -353,7 +387,7 @@ export default function PacientePerfil({ user }) {
           </button>
 
           {paciente && (
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button 
                 type="button"
                 className="btn-edit-patient"
@@ -386,7 +420,8 @@ export default function PacientePerfil({ user }) {
         ) : error ? (
           <div className="dashboard-alert-error">
             <AlertCircle size={20} />
-            <span>{error}</span>
+            <div style={{ flex: 1 }}>{error}</div>
+            <button onClick={fetchPacienteDetails} className="btn-retry">Tentar novamente</button>
           </div>
         ) : paciente ? (
           <div className="profile-container">
@@ -406,14 +441,22 @@ export default function PacientePerfil({ user }) {
                 </div>
 
                 <div className="profile-meta-tags">
-                  {paciente.email && (
+                  {paciente.email ? (
                     <span className="profile-tag">
                       <Mail size={14} /> {paciente.email}
                     </span>
+                  ) : (
+                    <span className="profile-tag" style={{ opacity: 0.7 }}>
+                      <Mail size={14} /> Sem email cadastrado
+                    </span>
                   )}
-                  {paciente.whatsapp && (
+                  {paciente.whatsapp ? (
                     <span className="profile-tag">
                       <Phone size={14} /> {paciente.whatsapp}
+                    </span>
+                  ) : (
+                    <span className="profile-tag" style={{ opacity: 0.7 }}>
+                      <Phone size={14} /> Sem telefone cadastrado
                     </span>
                   )}
                   {paciente.sexo && (
@@ -442,7 +485,7 @@ export default function PacientePerfil({ user }) {
                       Evolução do Paciente
                     </h3>
                     <p className="stat-description">
-                      Acompanhe o progresso físico, variação de peso e histórico clínico
+                      Acompanhamento de peso, índice de massa corporal e histórico das avaliações
                     </p>
                   </div>
                 </div>
@@ -467,19 +510,19 @@ export default function PacientePerfil({ user }) {
                 </div>
               </div>
 
-              {/* Métricas Resumidas em Mini Cards */}
+              {/* Métricas Resumidas em Cards */}
               <div className="evolution-metrics-grid">
                 <div className="metric-mini-card">
                   <span className="mini-card-label">Peso Inicial</span>
                   <span className="mini-card-val">
-                    {statsEvolucao?.pesoInicial ? `${statsEvolucao.pesoInicial} kg` : '--'}
+                    {statsEvolucao?.pesoInicial ? `${statsEvolucao.pesoInicial} kg` : 'Não registrado'}
                   </span>
                 </div>
 
                 <div className="metric-mini-card">
                   <span className="mini-card-label">Peso Atual</span>
                   <span className="mini-card-val highlight-cyan">
-                    {statsEvolucao?.pesoAtual ? `${statsEvolucao.pesoAtual} kg` : '--'}
+                    {statsEvolucao?.pesoAtual ? `${statsEvolucao.pesoAtual} kg` : 'Não registrado'}
                   </span>
                 </div>
 
@@ -520,116 +563,254 @@ export default function PacientePerfil({ user }) {
               {renderChart()}
             </div>
 
-            {/* Grid com Informações Clínicas e Histórico */}
-            <div className="profile-grid">
-              {/* Informações Cadastradas */}
-              <div className="stat-card">
-                <h3 className="stat-title" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Activity size={20} color="#00b4d8" /> Dados Físicos e Objetivos
-                </h3>
-                <div className="info-list">
-                  <div className="info-row">
-                    <span className="info-key">Altura:</span>
-                    <span className="info-val">{paciente.altura ? `${paciente.altura} m` : 'Não registrada'}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-key">Nível de Atividade:</span>
-                    <span className="info-val">{paciente.nivel_atividade || 'Não informado'}</span>
-                  </div>
-                  <div className="info-row">
-                    <span className="info-key">Objetivos:</span>
-                    <span className="info-val">
-                      {paciente.objetivos && Array.isArray(paciente.objetivos) && paciente.objetivos.length > 0 
-                        ? paciente.objetivos.join(', ')
-                        : (paciente.objetivo_texto || 'Não informado')}
-                    </span>
-                  </div>
-                  {paciente.patologias && paciente.patologias.length > 0 && (
-                    <div className="info-row">
-                      <span className="info-key">Patologias:</span>
-                      <span className="info-val">{paciente.patologias.join(', ')}</span>
-                    </div>
-                  )}
-                  {paciente.restricoes_alimentares && paciente.restricoes_alimentares.length > 0 && (
-                    <div className="info-row">
-                      <span className="info-key">Restrições:</span>
-                      <span className="info-val">{paciente.restricoes_alimentares.join(', ')}</span>
-                    </div>
-                  )}
-                  {paciente.alergias && paciente.alergias.length > 0 && (
-                    <div className="info-row">
-                      <span className="info-key">Alergias:</span>
-                      <span className="info-val">{paciente.alergias.join(', ')}</span>
-                    </div>
-                  )}
-                  {paciente.medicamentos && (
-                    <div className="info-row">
-                      <span className="info-key">Medicamentos:</span>
-                      <span className="info-val">{paciente.medicamentos}</span>
-                    </div>
-                  )}
-                  {paciente.suplementos && (
-                    <div className="info-row">
-                      <span className="info-key">Suplementos:</span>
-                      <span className="info-val">{paciente.suplementos}</span>
-                    </div>
-                  )}
-                  {paciente.observacoes && (
-                    <div className="info-row" style={{ flexDirection: 'column', gap: '0.3rem' }}>
-                      <span className="info-key">Observações Gerais:</span>
-                      <p className="consulta-obs">{paciente.observacoes}</p>
-                    </div>
-                  )}
-                </div>
+            {/* SEÇÕES DE DETALHAMENTO DO PRONTUÁRIO */}
+            <div className="patient-form-card">
+              <div className="form-tabs-header">
+                <button
+                  type="button"
+                  className={`form-tab-btn ${activeInfoTab === 'clinico' ? 'active' : ''}`}
+                  onClick={() => setActiveInfoTab('clinico')}
+                >
+                  <Activity size={18} />
+                  <span>Dados Clínicos & Antropometria</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`form-tab-btn ${activeInfoTab === 'habitos' ? 'active' : ''}`}
+                  onClick={() => setActiveInfoTab('habitos')}
+                >
+                  <HeartPulse size={18} />
+                  <span>Hábitos & Rotina</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`form-tab-btn ${activeInfoTab === 'consultas' ? 'active' : ''}`}
+                  onClick={() => setActiveInfoTab('consultas')}
+                >
+                  <Calendar size={18} />
+                  <span>Histórico de Consultas ({consultas.length})</span>
+                </button>
               </div>
 
-              {/* Histórico de Consultas */}
-              <div className="stat-card">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                  <h3 className="stat-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Calendar size={20} color="#0077b6" /> Histórico de Consultas ({consultas.length})
-                  </h3>
-                  <button 
-                    type="button" 
-                    className="btn-add-mini"
-                    onClick={() => setIsModalOpen(true)}
-                  >
-                    <Plus size={14} />
-                    <span>Adicionar</span>
-                  </button>
-                </div>
-
-                {consultas.length === 0 ? (
-                  <div className="empty-state-container" style={{ padding: '2rem 1rem' }}>
-                    <Calendar size={32} color="#94a3b8" />
-                    <h4 className="empty-state-title" style={{ fontSize: '1rem', marginTop: '0.5rem' }}>
-                      Nenhuma consulta registrada
-                    </h4>
-                    <p className="empty-state-subtitle" style={{ fontSize: '0.85rem' }}>
-                      Clique em "Registrar Consulta" para adicionar a primeira avaliação clínica deste paciente.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="consultas-history-list">
-                    {[...consultas].reverse().map(c => (
-                      <div key={c.id} className="consulta-history-item">
-                        <div className="consulta-date-col">
-                          <strong>{formatDate(c.data_consulta)}</strong>
-                          {c.proximo_retorno && (
-                            <span className="retorno-badge">
-                              Retorno: {formatDate(c.proximo_retorno)}
-                            </span>
+              <div className="patient-form-body">
+                {/* ABA 1: DADOS CLÍNICOS */}
+                {activeInfoTab === 'clinico' && (
+                  <div className="profile-grid">
+                    <div className="stat-card" style={{ boxShadow: 'none' }}>
+                      <h4 className="section-title">
+                        <Scale size={18} color="#00b4d8" /> Antropometria & Metas
+                      </h4>
+                      <div className="info-list">
+                        <div className="info-row">
+                          <span className="info-key">Peso Inicial:</span>
+                          <span className="info-val">{paciente.peso_inicial ? `${paciente.peso_inicial} kg` : 'Não informado'}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-key">Altura:</span>
+                          <span className="info-val">{paciente.altura ? (paciente.altura < 3 ? `${paciente.altura} m` : `${(paciente.altura/100).toFixed(2)} m`) : 'Não informada'}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-key">IMC Inicial:</span>
+                          <span className="info-val">{statsEvolucao?.imcInicial || 'Não calculado'}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-key">Nível de Atividade:</span>
+                          <span className="info-val">{paciente.nivel_atividade || 'Não informado'}</span>
+                        </div>
+                        <div className="info-row" style={{ flexDirection: 'column', gap: '0.4rem' }}>
+                          <span className="info-key">Objetivos:</span>
+                          <div className="chips-container" style={{ marginTop: '0.2rem' }}>
+                            {objetivosList.length > 0 ? (
+                              objetivosList.map((obj, i) => (
+                                <span key={i} className="chip-btn selected" style={{ cursor: 'default' }}>
+                                  {obj}
+                                </span>
+                              ))
+                            ) : paciente.objetivo_texto ? (
+                              <span className="info-val">{paciente.objetivo_texto}</span>
+                            ) : (
+                              <span className="info-val" style={{ opacity: 0.7 }}>Não informado</span>
+                            )}
+                          </div>
+                          {paciente.objetivo_texto && objetivosList.length > 0 && (
+                            <p className="consulta-obs" style={{ marginTop: '0.2rem' }}>{paciente.objetivo_texto}</p>
                           )}
                         </div>
-                        <div className="consulta-data-col">
-                          {c.peso && <span><strong>Peso:</strong> {c.peso} kg</span>}
-                          {c.percentual_gordura && <span><strong>% Gordura:</strong> {c.percentual_gordura}%</span>}
-                          {c.cintura && <span><strong>Cintura:</strong> {c.cintura} cm</span>}
-                          {c.quadril && <span><strong>Quadril:</strong> {c.quadril} cm</span>}
-                          {c.observacoes && <p className="consulta-obs">{c.observacoes}</p>}
+                      </div>
+                    </div>
+
+                    <div className="stat-card" style={{ boxShadow: 'none' }}>
+                      <h4 className="section-title">
+                        <AlertTriangle size={18} color="#0077b6" /> Condições Clínicas & Alergias
+                      </h4>
+                      <div className="info-list">
+                        <div className="info-row" style={{ flexDirection: 'column', gap: '0.3rem' }}>
+                          <span className="info-key">Patologias / Condições de Saúde:</span>
+                          <div className="chips-container">
+                            {patologiasList.length > 0 ? (
+                              patologiasList.map((p, i) => (
+                                <span key={i} className={`chip-btn ${p === 'Nenhum' ? 'none-chip selected' : 'selected'}`} style={{ cursor: 'default' }}>
+                                  {p}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="info-val" style={{ opacity: 0.7 }}>Nenhuma registrada</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="info-row" style={{ flexDirection: 'column', gap: '0.3rem' }}>
+                          <span className="info-key">Restrições Alimentares:</span>
+                          <div className="chips-container">
+                            {restricoesList.length > 0 ? (
+                              restricoesList.map((r, i) => (
+                                <span key={i} className={`chip-btn ${r === 'Nenhum' ? 'none-chip selected' : 'selected'}`} style={{ cursor: 'default' }}>
+                                  {r}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="info-val" style={{ opacity: 0.7 }}>Nenhuma registrada</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="info-row" style={{ flexDirection: 'column', gap: '0.3rem' }}>
+                          <span className="info-key">Alergias Alimentares:</span>
+                          <div className="chips-container">
+                            {alergiasList.length > 0 ? (
+                              alergiasList.map((a, i) => (
+                                <span key={i} className={`chip-btn ${a === 'Nenhum' ? 'none-chip selected' : 'selected'}`} style={{ cursor: 'default' }}>
+                                  {a}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="info-val" style={{ opacity: 0.7 }}>Nenhuma registrada</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="info-row">
+                          <span className="info-key">Medicamentos em Uso:</span>
+                          <span className="info-val">{paciente.medicamentos || 'Nenhum'}</span>
+                        </div>
+
+                        <div className="info-row">
+                          <span className="info-key">Suplementos:</span>
+                          <span className="info-val">{paciente.suplementos || 'Nenhum'}</span>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* ABA 2: HÁBITOS E ROTINA */}
+                {activeInfoTab === 'habitos' && (
+                  <div className="profile-grid">
+                    <div className="stat-card" style={{ boxShadow: 'none' }}>
+                      <h4 className="section-title">
+                        <Utensils size={18} color="#00b4d8" /> Rotina Diária & Alimentação
+                      </h4>
+                      <div className="info-list">
+                        <div className="info-row">
+                          <span className="info-key">Refeições por dia:</span>
+                          <span className="info-val">{paciente.refeicoes_por_dia ? `${paciente.refeicoes_por_dia} refeições` : 'Não informado'}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-key">Consumo diário de água:</span>
+                          <span className="info-val">{paciente.litros_agua ? `${paciente.litros_agua} litros` : 'Não informado'}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-key">Horário que costuma acordar:</span>
+                          <span className="info-val">{paciente.horario_acorda || 'Não informado'}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-key">Horário que costuma dormir:</span>
+                          <span className="info-val">{paciente.horario_dorme || 'Não informado'}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="stat-card" style={{ boxShadow: 'none' }}>
+                      <h4 className="section-title">
+                        <Dumbbell size={18} color="#0077b6" /> Exercício Físico & Observações
+                      </h4>
+                      <div className="info-list">
+                        <div className="info-row">
+                          <span className="info-key">Pratica atividade física:</span>
+                          <span className="info-val">{paciente.atividade_fisica ? 'Sim' : 'Não'}</span>
+                        </div>
+                        {paciente.atividade_fisica && (
+                          <div className="info-row">
+                            <span className="info-key">Descrição da Atividade:</span>
+                            <span className="info-val">{paciente.atividade_fisica_descricao || 'Não especificada'}</span>
+                          </div>
+                        )}
+                        <div className="info-row" style={{ flexDirection: 'column', gap: '0.4rem' }}>
+                          <span className="info-key">Observações Gerais:</span>
+                          <p className="consulta-obs">
+                            {paciente.observacoes || 'Nenhuma observação adicional cadastrada.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ABA 3: HISTÓRICO DE CONSULTAS */}
+                {activeInfoTab === 'consultas' && (
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                      <h4 className="section-title" style={{ marginBottom: 0 }}>
+                        <Calendar size={18} color="#0077b6" /> Consultas Registradas ({consultas.length})
+                      </h4>
+                      <button 
+                        type="button" 
+                        className="btn-nova-consulta"
+                        style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+                        onClick={() => setIsModalOpen(true)}
+                      >
+                        <Plus size={15} />
+                        <span>Nova Consulta</span>
+                      </button>
+                    </div>
+
+                    {consultas.length === 0 ? (
+                      <div className="empty-state-container" style={{ padding: '2.5rem 1rem' }}>
+                        <Calendar size={36} color="#94a3b8" />
+                        <h4 className="empty-state-title" style={{ fontSize: '1.05rem', marginTop: '0.5rem' }}>
+                          Nenhuma consulta registrada ainda
+                        </h4>
+                        <p className="empty-state-subtitle" style={{ fontSize: '0.85rem' }}>
+                          Clique no botão "Nova Consulta" acima para adicionar a primeira avaliação clínica.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="consultas-history-list">
+                        {[...consultas].reverse().map(c => (
+                          <div key={c.id} className="consulta-history-item">
+                            <div className="consulta-date-col">
+                              <strong style={{ fontSize: '1rem', color: 'var(--text-main)' }}>
+                                {formatDate(c.data_consulta)}
+                              </strong>
+                              {c.proximo_retorno && (
+                                <span className="retorno-badge">
+                                  Próximo Retorno: {formatDate(c.proximo_retorno)}
+                                </span>
+                              )}
+                            </div>
+                            <div className="consulta-data-col">
+                              {c.peso && <span><strong>Peso:</strong> {c.peso} kg</span>}
+                              {c.percentual_gordura && <span><strong>% Gordura:</strong> {c.percentual_gordura}%</span>}
+                              {c.cintura && <span><strong>Cintura:</strong> {c.cintura} cm</span>}
+                              {c.quadril && <span><strong>Quadril:</strong> {c.quadril} cm</span>}
+                              {c.observacoes && <p className="consulta-obs">{c.observacoes}</p>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -759,7 +940,7 @@ export default function PacientePerfil({ user }) {
                       id="consulta_observacoes"
                       className="form-textarea" 
                       rows={3}
-                      placeholder="Adesão à dieta, alterações corporais, exames laboratoriais ou novas orientações..."
+                      placeholder="Adesão ao plano alimentar, mudanças corporais, sintomas ou orientações adicionais..."
                       value={formConsulta.observacoes}
                       onChange={(e) => setFormConsulta({ ...formConsulta, observacoes: e.target.value })}
                     />

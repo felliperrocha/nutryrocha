@@ -1503,6 +1503,16 @@ body {
   color: white;
 }
 
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 1.25rem;
+}
+
 .profile-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

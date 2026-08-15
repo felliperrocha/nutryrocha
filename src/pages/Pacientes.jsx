@@ -76,9 +76,27 @@ export default function Pacientes({ user }) {
     return new Date(dateStr).toLocaleDateString('pt-BR');
   };
 
+  const parseArrayField = (val) => {
+    if (!val) return [];
+    if (Array.isArray(val)) return val;
+    if (typeof val === 'string') {
+      if (val.startsWith('{') && val.endsWith('}')) {
+        return val.slice(1, -1).split(',').map(s => s.trim().replace(/^"|"$/g, '')).filter(Boolean);
+      }
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {
+        return [val];
+      }
+    }
+    return [];
+  };
+
   const getObjetivosDisplay = (paciente) => {
-    if (paciente.objetivos && Array.isArray(paciente.objetivos) && paciente.objetivos.length > 0) {
-      return paciente.objetivos.slice(0, 2).join(', ') + (paciente.objetivos.length > 2 ? ` (+${paciente.objetivos.length - 2})` : '');
+    const list = parseArrayField(paciente.objetivos);
+    if (list.length > 0) {
+      return list.slice(0, 2).join(', ') + (list.length > 2 ? ` (+${list.length - 2})` : '');
     }
     if (paciente.objetivo_texto) {
       return paciente.objetivo_texto;
