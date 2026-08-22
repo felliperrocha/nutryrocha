@@ -9,7 +9,9 @@ import {
   Target, 
   AlertCircle,
   RefreshCw,
-  X
+  X,
+  Trash2,
+  CheckCircle2
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { sql } from '../lib/db';
@@ -20,6 +22,8 @@ export default function Pacientes({ user }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   const fetchPacientes = useCallback(async () => {
     try {
@@ -73,6 +77,36 @@ export default function Pacientes({ user }) {
   useEffect(() => {
     fetchPacientes();
   }, [fetchPacientes]);
+
+  // Excluir registro do paciente
+  const handleDeletePaciente = async (e, paciente) => {
+    e.stopPropagation(); // Evitar navegação ao clicar no botão
+    const confirmName = window.prompt(`Tem certeza que deseja excluir o paciente "${paciente.nome}" e todo o seu histórico?\n\nPara confirmar, digite exatamente o nome: ${paciente.nome}`);
+    if (confirmName !== paciente.nome) {
+      if (confirmName !== null) {
+        alert('Nome incorreto. A exclusão foi cancelada.');
+      }
+      return;
+    }
+
+    try {
+      setDeletingId(paciente.id);
+      // 1. Excluir dados relacionados
+      await sql`DELETE FROM planos_alimentares WHERE paciente_id = ${paciente.id}`;
+      await sql`DELETE FROM consultas WHERE paciente_id = ${paciente.id}`;
+      // 2. Excluir paciente
+      await sql`DELETE FROM pacientes WHERE id = ${paciente.id}`;
+
+      setSuccessMsg(`Paciente "${paciente.nome}" e seus registros foram excluídos com sucesso.`);
+      setPacientes(prev => prev.filter(p => p.id !== paciente.id));
+      setTimeout(() => setSuccessMsg(null), 4000);
+    } catch (err) {
+      console.error('Erro ao excluir paciente:', err);
+      setError('Não foi possível excluir o paciente. Tente novamente.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filteredPacientes = pacientes.filter(p => {
     const term = searchTerm.toLowerCase().trim();
@@ -142,6 +176,13 @@ export default function Pacientes({ user }) {
             <span>Novo Paciente</span>
           </button>
         </div>
+
+        {successMsg && (
+          <div className="dashboard-alert-success" style={{ marginBottom: '1.5rem' }}>
+            <CheckCircle2 size={20} />
+            <span style={{ flex: 1 }}>{successMsg}</span>
+          </div>
+        )}
 
         {error && (
           <div className="dashboard-alert-error" style={{ marginBottom: '1.5rem' }}>
@@ -255,9 +296,21 @@ export default function Pacientes({ user }) {
                       </div>
                     </div>
 
-                    <div className="patient-action-btn">
-                      <span>Prontuário</span>
-                      <ChevronRight size={16} />
+                    <div className="patient-actions-group">
+                      <button
+                        type="button"
+                        className="btn-delete-patient-card"
+                        onClick={(e) => handleDeletePaciente(e, paciente)}
+                        disabled={deletingId === paciente.id}
+                        title="Excluir paciente"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+
+                      <div className="patient-action-btn">
+                        <span>Prontuário</span>
+                        <ChevronRight size={16} />
+                      </div>
                     </div>
                   </div>
                 ))}

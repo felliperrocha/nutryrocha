@@ -16,7 +16,10 @@ import {
   RefreshCw, 
   X,
   Filter,
-  Plus
+  Plus,
+  Trash2,
+  CheckCircle,
+  CircleDot
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { sql } from '../lib/db';
@@ -44,6 +47,10 @@ export default function Consultas({ user }) {
     observacoes: '',
     proximo_retorno: ''
   });
+
+  // Estado para exclusão de consulta
+  const [deletingConsultaId, setDeletingConsultaId] = useState(null);
+  const [actionSuccessMsg, setActionSuccessMsg] = useState(null);
 
   const fetchConsultasData = useCallback(async () => {
     try {
@@ -235,6 +242,7 @@ export default function Consultas({ user }) {
         observacoes: '',
         proximo_retorno: ''
       });
+      showSuccessFeedback('Consulta registrada com sucesso!');
       fetchConsultasData();
     } catch (err) {
       console.error('Erro ao registrar consulta:', err);
@@ -242,6 +250,60 @@ export default function Consultas({ user }) {
     } finally {
       setSavingConsulta(false);
     }
+  };
+
+  // Excluir Consulta
+  const handleDeleteConsulta = async (consultaId, pacienteNome) => {
+    if (!window.confirm(`Tem certeza que deseja excluir a consulta de ${pacienteNome}? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      setDeletingConsultaId(consultaId);
+      await sql`
+        DELETE FROM consultas WHERE id = ${consultaId}
+      `;
+      showSuccessFeedback(`Consulta de ${pacienteNome} excluída com sucesso.`);
+      setConsultas(prev => prev.filter(c => c.id !== consultaId));
+    } catch (err) {
+      console.error('Erro ao excluir consulta:', err);
+      setError('Não foi possível excluir a consulta. Tente novamente.');
+    } finally {
+      setDeletingConsultaId(null);
+    }
+  };
+
+  // Marcar Consulta / Retorno como Concluída (ou registrar realização)
+  const handleMarcarConcluida = async (consulta) => {
+    const isFutura = consulta.data_consulta && String(consulta.data_consulta).split('T')[0] > todayStr;
+    const msg = isFutura
+      ? `Deseja marcar esta consulta de ${consulta.paciente_nome} como realizada hoje (${new Date().toLocaleDateString('pt-BR')})?`
+      : `Deseja atualizar a data de realização para hoje?`;
+
+    if (!window.confirm(msg)) {
+      return;
+    }
+
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      await sql`
+        UPDATE consultas 
+        SET data_consulta = ${hoje}
+        WHERE id = ${consulta.id}
+      `;
+      showSuccessFeedback(`Consulta de ${consulta.paciente_nome} marcada como concluída hoje!`);
+      fetchConsultasData();
+    } catch (err) {
+      console.error('Erro ao marcar consulta como concluída:', err);
+      setError('Não foi possível atualizar o status da consulta.');
+    }
+  };
+
+  const showSuccessFeedback = (msg) => {
+    setActionSuccessMsg(msg);
+    setTimeout(() => {
+      setActionSuccessMsg(null);
+    }, 4000);
   };
 
   // Estatísticas rápidas de consultas
@@ -266,7 +328,7 @@ export default function Consultas({ user }) {
             <span className="current-date-badge">Agenda Clínica</span>
             <h1 className="dashboard-greeting">Consultas</h1>
             <p className="dashboard-subtext">
-              Consulte e acompanhe todas as consultas e retornos de seus pacientes.
+              Consulte, acompanhe, marque como concluída ou gerencie os retornos de seus pacientes.
             </p>
           </div>
 
@@ -293,6 +355,13 @@ export default function Consultas({ user }) {
           </div>
         </div>
 
+        {actionSuccessMsg && (
+          <div className="dashboard-alert-success">
+            <CheckCircle2 size={20} />
+            <span style={{ flex: 1 }}>{actionSuccessMsg}</span>
+          </div>
+        )}
+
         {error && (
           <div className="dashboard-alert-error" style={{ marginBottom: '1.5rem' }}>
             <AlertCircle size={20} />
@@ -301,9 +370,14 @@ export default function Consultas({ user }) {
           </div>
         )}
 
-        {/* Cards de Métricas Rápidas */}
+        {/* Cards de Métricas Interativas (clique para filtrar dinamicamente) */}
         <div className="dashboard-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          <div className="stat-card" style={{ padding: '1.25rem' }}>
+          <div 
+            className={`stat-card stat-card-interactive ${filterPeriodo === 'todas' ? 'active-filter-card' : ''}`} 
+            style={{ padding: '1.25rem', cursor: 'pointer' }}
+            onClick={() => setFilterPeriodo('todas')}
+            title="Clique para ver todas as consultas"
+          >
             <div className="stat-card-header">
               <span className="stat-title">Total de Consultas</span>
               <div className="stat-icon-wrapper cyan" style={{ width: '38px', height: '38px' }}>
@@ -314,9 +388,17 @@ export default function Consultas({ user }) {
               <span className="stat-number" style={{ fontSize: '2rem' }}>{statsConsultas.total}</span>
               <span className="stat-label">registros totais</span>
             </div>
+            <div className="card-filter-hint">
+              <span>{filterPeriodo === 'todas' ? '● Filtro ativo' : 'Clique para filtrar'}</span>
+            </div>
           </div>
 
-          <div className="stat-card" style={{ padding: '1.25rem' }}>
+          <div 
+            className={`stat-card stat-card-interactive ${filterPeriodo === 'mes' ? 'active-filter-card' : ''}`} 
+            style={{ padding: '1.25rem', cursor: 'pointer' }}
+            onClick={() => setFilterPeriodo('mes')}
+            title="Clique para filtrar apenas consultas deste mês"
+          >
             <div className="stat-card-header">
               <span className="stat-title">Consultas este Mês</span>
               <div className="stat-icon-wrapper teal" style={{ width: '38px', height: '38px' }}>
@@ -327,9 +409,17 @@ export default function Consultas({ user }) {
               <span className="stat-number" style={{ fontSize: '2rem' }}>{statsConsultas.esteMes}</span>
               <span className="stat-label">no mês corrente</span>
             </div>
+            <div className="card-filter-hint">
+              <span>{filterPeriodo === 'mes' ? '● Filtro ativo' : 'Clique para filtrar'}</span>
+            </div>
           </div>
 
-          <div className="stat-card" style={{ padding: '1.25rem' }}>
+          <div 
+            className={`stat-card stat-card-interactive ${filterPeriodo === 'futuras' ? 'active-filter-card' : ''}`} 
+            style={{ padding: '1.25rem', cursor: 'pointer' }}
+            onClick={() => setFilterPeriodo('futuras')}
+            title="Clique para filtrar apenas retornos e agendamentos futuros"
+          >
             <div className="stat-card-header">
               <span className="stat-title">Próximos Retornos</span>
               <div className="stat-icon-wrapper amber" style={{ width: '38px', height: '38px' }}>
@@ -339,6 +429,9 @@ export default function Consultas({ user }) {
             <div className="stat-number-wrapper" style={{ marginTop: '0.75rem' }}>
               <span className="stat-number" style={{ fontSize: '2rem' }}>{statsConsultas.comRetorno}</span>
               <span className="stat-label">retornos agendados</span>
+            </div>
+            <div className="card-filter-hint">
+              <span>{filterPeriodo === 'futuras' ? '● Filtro ativo' : 'Clique para filtrar'}</span>
             </div>
           </div>
         </div>
@@ -443,27 +536,34 @@ export default function Consultas({ user }) {
                   const dataConsultaIso = c.data_consulta ? String(c.data_consulta).split('T')[0] : '';
                   const isFutura = dataConsultaIso > todayStr;
                   const isHoje = dataConsultaIso === todayStr;
+                  const isConcluida = dataConsultaIso <= todayStr;
 
                   return (
                     <div 
                       key={c.id} 
                       className={`consulta-agenda-card ${isHoje ? 'hoje-card' : ''}`}
-                      onClick={() => navigate(`/pacientes/${c.paciente_id}`)}
-                      role="button"
-                      tabIndex={0}
                     >
                       {/* Coluna da Data */}
-                      <div className="consulta-agenda-date-box">
+                      <div 
+                        className="consulta-agenda-date-box"
+                        onClick={() => navigate(`/pacientes/${c.paciente_id}`)}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <div className="agenda-day-badge">
                           <Calendar size={14} color="#00b4d8" />
                           <span>{formatDate(c.data_consulta)}</span>
                         </div>
                         {isHoje && <span className="hoje-pill">Hoje</span>}
                         {isFutura && <span className="futura-pill">Agendada</span>}
+                        {isConcluida && !isHoje && <span className="concluida-pill">Concluída</span>}
                       </div>
 
                       {/* Informações do Paciente */}
-                      <div className="consulta-agenda-info">
+                      <div 
+                        className="consulta-agenda-info"
+                        onClick={() => navigate(`/pacientes/${c.paciente_id}`)}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <div className="consulta-agenda-header-row">
                           <span className="consulta-patient-name">{c.paciente_nome}</span>
                           {c.proximo_retorno && (
@@ -510,10 +610,45 @@ export default function Consultas({ user }) {
                         )}
                       </div>
 
-                      {/* Botão de Ação para ir ao Prontuário */}
-                      <div className="consulta-agenda-action">
-                        <span>Prontuário</span>
-                        <ChevronRight size={16} />
+                      {/* Ações da Consulta: Concluir, Excluir, Prontuário */}
+                      <div className="consulta-agenda-actions-group">
+                        {isFutura && (
+                          <button
+                            type="button"
+                            className="btn-action-concluir"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarcarConcluida(c);
+                            }}
+                            title="Marcar como realizada hoje"
+                          >
+                            <CheckCircle size={15} />
+                            <span>Concluir</span>
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className="btn-action-delete"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteConsulta(c.id, c.paciente_nome);
+                          }}
+                          disabled={deletingConsultaId === c.id}
+                          title="Excluir esta consulta"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="consulta-agenda-action"
+                          onClick={() => navigate(`/pacientes/${c.paciente_id}`)}
+                          title="Abrir prontuário completo"
+                        >
+                          <span>Prontuário</span>
+                          <ChevronRight size={16} />
+                        </button>
                       </div>
                     </div>
                   );

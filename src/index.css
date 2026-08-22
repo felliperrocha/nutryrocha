@@ -2393,3 +2393,181 @@ body {
   border-color: var(--primary-color);
 }
 
+/* Interatividade dos Cards de Métricas */
+.stat-card-interactive {
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card-interactive:hover {
+  transform: translateY(-3px);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-card-interactive.active-filter-card {
+  border-color: var(--primary-color);
+  background: linear-gradient(180deg, var(--surface-color) 0%, var(--primary-soft) 100%);
+  box-shadow: 0 0 0 2px var(--primary-color), var(--shadow-md);
+}
+
+.card-filter-hint {
+  margin-top: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.active-filter-card .card-filter-hint {
+  color: var(--primary-dark);
+}
+
+[data-theme="dark"] .active-filter-card .card-filter-hint,
+.dark .active-filter-card .card-filter-hint {
+  color: var(--primary-color);
+}
+
+/* Grupo de Ações da Consulta */
+.consulta-agenda-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.btn-action-concluir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  background-color: var(--accent-emerald-light);
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-concluir:hover {
+  background-color: #10b981;
+  color: white;
+  border-color: #10b981;
+  transform: translateY(-1px);
+}
+
+.btn-action-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.55rem;
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-delete:hover {
+  background-color: var(--error-light);
+  color: var(--error-color);
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.btn-action-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.concluida-pill {
+  background-color: var(--surface-color);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Ações no Perfil e Lista de Pacientes */
+.patient-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.btn-delete-patient-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background-color: var(--surface-color);
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-patient-card:hover {
+  background-color: var(--error-light);
+  color: var(--error-color);
+  border-color: #fca5a5;
+  transform: scale(1.05);
+}
+
+.btn-delete-patient-card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-delete-patient-profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.15rem;
+  background-color: var(--surface-color);
+  color: var(--error-color);
+  border: 1.5px solid #fca5a5;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-patient-profile:hover {
+  background-color: var(--error-color);
+  color: white;
+  border-color: var(--error-color);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-delete-item-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.4rem;
+  background-color: transparent;
+  color: var(--text-light);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete-item-inline:hover {
+  background-color: var(--error-light);
+  color: var(--error-color);
+  border-color: #fca5a5;
+}
+
+

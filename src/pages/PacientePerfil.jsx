@@ -27,7 +27,8 @@ import {
   FileText,
   ChevronRight,
   Eye,
-  Check
+  Check,
+  Trash2
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { sql } from '../lib/db';
@@ -470,6 +471,52 @@ export default function PacientePerfil({ user }) {
     }
   };
 
+  // Excluir Paciente
+  const handleDeletePatient = async () => {
+    if (!paciente) return;
+    const confirmNome = window.prompt(`Para confirmar a exclusão deste paciente e de todo o seu histórico (consultas e planos), digite o nome do paciente "${paciente.nome}":`);
+    if (confirmNome !== paciente.nome) {
+      if (confirmNome !== null) {
+        alert('Nome incorreto. A exclusão foi cancelada por segurança.');
+      }
+      return;
+    }
+
+    try {
+      setLoading(true);
+      // 1. Excluir planos alimentares e consultas vinculadas
+      await sql`DELETE FROM planos_alimentares WHERE paciente_id = ${id}`;
+      await sql`DELETE FROM consultas WHERE paciente_id = ${id}`;
+      // 2. Excluir paciente
+      await sql`DELETE FROM pacientes WHERE id = ${id}`;
+      
+      alert(`Paciente ${paciente.nome} excluído com sucesso.`);
+      navigate('/pacientes');
+    } catch (err) {
+      console.error('Erro ao excluir paciente:', err);
+      setError('Erro ao excluir o paciente. Verifique sua conexão e tente novamente.');
+      setLoading(false);
+    }
+  };
+
+  // Excluir Consulta individual do histórico
+  const handleDeleteConsulta = async (consultaId, dataConsulta) => {
+    if (!window.confirm(`Tem certeza que deseja excluir o registro de consulta de ${formatDate(dataConsulta)}?`)) {
+      return;
+    }
+
+    try {
+      await sql`DELETE FROM consultas WHERE id = ${consultaId}`;
+      setConsultas(prev => prev.filter(c => c.id !== consultaId));
+      setSaveSuccessMsg('Consulta excluída com sucesso.');
+      setTimeout(() => setSaveSuccessMsg(null), 3500);
+    } catch (err) {
+      console.error('Erro ao excluir consulta:', err);
+      setSaveErrorMsg('Não foi possível excluir esta consulta.');
+      setTimeout(() => setSaveErrorMsg(null), 4000);
+    }
+  };
+
   // Dados cronológicos para o gráfico de evolução de peso
   const timelineData = useMemo(() => {
     if (!paciente) return [];
@@ -682,6 +729,16 @@ export default function PacientePerfil({ user }) {
               >
                 <Plus size={16} />
                 <span>Nova Consulta</span>
+              </button>
+
+              <button 
+                type="button"
+                className="btn-delete-patient-profile"
+                onClick={handleDeletePatient}
+                title="Excluir paciente e todos os registros"
+              >
+                <Trash2 size={16} />
+                <span>Excluir Paciente</span>
               </button>
             </div>
           )}
@@ -1411,11 +1468,21 @@ export default function PacientePerfil({ user }) {
                             <strong style={{ fontSize: '1rem', color: 'var(--text-main)' }}>
                               {formatDate(c.data_consulta)}
                             </strong>
-                            {c.proximo_retorno && (
-                              <span className="retorno-badge">
-                                Próximo Retorno: {formatDate(c.proximo_retorno)}
-                              </span>
-                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                              {c.proximo_retorno && (
+                                <span className="retorno-badge">
+                                  Próximo Retorno: {formatDate(c.proximo_retorno)}
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                className="btn-delete-item-inline"
+                                onClick={() => handleDeleteConsulta(c.id, c.data_consulta)}
+                                title="Excluir este registro de consulta"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
                           </div>
                           <div className="consulta-data-col">
                             {c.peso && <span><strong>Peso:</strong> {c.peso} kg</span>}
