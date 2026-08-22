@@ -2432,29 +2432,31 @@ body {
 .consulta-agenda-actions-group {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   flex-shrink: 0;
 }
 
 .btn-action-concluir {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.75rem;
-  background-color: var(--accent-emerald-light);
-  color: #065f46;
-  border: 1px solid #a7f3d0;
-  border-radius: var(--radius-sm);
-  font-size: 0.8rem;
-  font-weight: 700;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(4px);
 }
 
 .btn-action-concluir:hover {
-  background-color: #10b981;
-  color: white;
+  background: #10b981;
+  color: #ffffff;
   border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   transform: translateY(-1px);
 }
 
@@ -2462,11 +2464,12 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.45rem 0.55rem;
-  background-color: transparent;
-  color: var(--text-light);
+  width: 36px;
+  height: 36px;
+  background-color: var(--surface-color);
+  color: var(--text-muted);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -2474,21 +2477,52 @@ body {
 .btn-action-delete:hover {
   background-color: var(--error-light);
   color: var(--error-color);
-  border-color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.35);
   transform: translateY(-1px);
 }
 
 .btn-action-delete:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
+}
+
+.consulta-agenda-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  padding: 0.5rem 1rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+[data-theme="dark"] .consulta-agenda-action,
+.dark .consulta-agenda-action {
+  color: #38bdf8;
+  border-color: #1f2a40;
+  background-color: #131b2e;
+}
+
+.consulta-agenda-action:hover {
+  background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.25);
+  transform: translateY(-1px);
 }
 
 .concluida-pill {
-  background-color: var(--surface-color);
+  background-color: rgba(100, 116, 139, 0.1);
   color: var(--text-muted);
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 0.15rem 0.5rem;
+  padding: 0.18rem 0.55rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--border-color);
   text-transform: uppercase;
