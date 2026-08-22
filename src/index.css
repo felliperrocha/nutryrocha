@@ -843,16 +843,118 @@ body {
   box-shadow: 0 6px 14px rgba(0, 180, 216, 0.35);
 }
 
+.search-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 280px;
+  background-color: var(--surface-color);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 0.85rem;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.search-input-wrapper:hover {
+  border-color: #cbd5e1;
+}
+
+[data-theme="dark"] .search-input-wrapper:hover,
+.dark .search-input-wrapper:hover {
+  border-color: #334155;
+}
+
+.search-input-wrapper:focus-within {
+  border-color: var(--border-focus);
+  background-color: var(--surface-color);
+  box-shadow: 0 0 0 3.5px var(--primary-soft), 0 2px 8px rgba(0, 180, 216, 0.12);
+  transform: translateY(-1px);
+}
+
+.search-icon-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.65rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease, transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.search-input-wrapper:focus-within .search-icon-badge {
+  color: var(--primary-color);
+  transform: scale(1.08);
+}
+
+.search-input {
+  flex: 1;
+  width: 100%;
+  padding: 0.75rem 0.25rem 0.75rem 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: var(--text-main);
+  font-weight: 500;
+}
+
+.search-input::placeholder {
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+.search-clear-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 0.35rem;
+}
+
+.search-clear-btn:hover {
+  background-color: var(--surface-hover);
+  color: var(--text-main);
+}
+
 .results-count-badge {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
   background-color: var(--bg-color);
-  padding: 0.4rem 0.85rem;
+  padding: 0.5rem 0.95rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.results-count-badge strong {
+  color: var(--primary-dark);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .results-count-badge strong,
+.dark .results-count-badge strong {
+  color: var(--primary-color);
 }
 
 .patients-grid-list {

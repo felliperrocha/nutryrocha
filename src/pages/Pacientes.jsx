@@ -8,7 +8,8 @@ import {
   Calendar, 
   Target, 
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { sql } from '../lib/db';
@@ -73,9 +74,14 @@ export default function Pacientes({ user }) {
     fetchPacientes();
   }, [fetchPacientes]);
 
-  const filteredPacientes = pacientes.filter(p => 
-    p.nome?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPacientes = pacientes.filter(p => {
+    const term = searchTerm.toLowerCase().trim();
+    if (!term) return true;
+    const nomeMatch = p.nome?.toLowerCase().includes(term);
+    const emailMatch = p.email?.toLowerCase().includes(term);
+    const zapMatch = p.whatsapp?.toLowerCase().includes(term);
+    return nomeMatch || emailMatch || zapMatch;
+  });
 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'Nenhuma consulta';
@@ -146,21 +152,36 @@ export default function Pacientes({ user }) {
         )}
 
         <div className="stat-card">
-          {/* Barra de busca */}
+          {/* Barra de busca moderna e profissional */}
           <div className="search-filter-bar">
             <div className="search-input-wrapper">
-              <Search size={18} color="#64748b" />
+              <div className="search-icon-badge">
+                <Search size={19} />
+              </div>
               <input 
                 type="text" 
-                placeholder="Buscar paciente por nome..." 
+                placeholder="Buscar paciente por nome, email ou whatsapp..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
+                id="search-pacientes-input"
               />
+              {searchTerm && (
+                <button 
+                  type="button" 
+                  className="search-clear-btn"
+                  onClick={() => setSearchTerm('')}
+                  title="Limpar busca"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
             {!loading && (
               <div className="results-count-badge">
-                {filteredPacientes.length} paciente{filteredPacientes.length === 1 ? '' : 's'}
+                <span>Total:</span>
+                <strong>{filteredPacientes.length}</strong>
+                <span>paciente{filteredPacientes.length === 1 ? '' : 's'}</span>
               </div>
             )}
           </div>
