@@ -524,7 +524,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 <div className="form-grid-2">
                   <div className="form-group span-2">
                     <label className="form-label" htmlFor="nome">
-                      Nome completo <span className="required-star">*</span>
+                      Nome Completo <span className="required-star">*</span>
                     </label>
                     <input 
                       type="text" 
@@ -539,7 +539,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
 
                   <div className="form-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="form-label" htmlFor="dataNascimento">Data de nascimento</label>
+                      <label className="form-label" htmlFor="dataNascimento">Data de Nascimento</label>
                       {idade !== null && (
                         <span className="calculated-pill">{idade} anos</span>
                       )}
@@ -594,7 +594,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                   </div>
 
                   <div className="form-group span-2">
-                    <label className="form-label" htmlFor="email">Email</label>
+                    <label className="form-label" htmlFor="email">E-mail</label>
                     <input 
                       type="email" 
                       id="email"
@@ -625,7 +625,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
               <div className="tab-pane">
                 <div className="form-grid-3">
                   <div className="form-group">
-                    <label className="form-label" htmlFor="peso">Peso atual</label>
+                    <label className="form-label" htmlFor="peso">Peso Atual</label>
                     <div className="input-with-suffix">
                       <input 
                         type="number" 
@@ -674,7 +674,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                  <label className="form-label">Objetivo principal (seleção múltipla)</label>
+                  <label className="form-label">Objetivos Principais (seleção múltipla)</label>
                   <div className="chips-container">
                     {OBJETIVOS_OPCOES.map((obj) => (
                       <button
@@ -699,7 +699,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                  <label className="form-label">Nível de atividade física</label>
+                  <label className="form-label">Nível de Atividade Física</label>
                   <div className="radio-group-pills">
                     {ATIVIDADE_OPCOES.map((lvl) => (
                       <button
@@ -715,7 +715,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                  <label className="form-label">Patologias ou condições de saúde</label>
+                  <label className="form-label">Condições Clínicas / Patologias</label>
                   <div className="chips-container">
                     <button
                       type="button"
@@ -768,7 +768,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                  <label className="form-label">Restrições alimentares</label>
+                  <label className="form-label">Restrições Alimentares</label>
                   <div className="chips-container">
                     <button
                       type="button"
@@ -821,7 +821,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                  <label className="form-label">Alergias alimentares</label>
+                  <label className="form-label">Alergias Alimentares</label>
                   <div className="chips-container">
                     <button
                       type="button"
@@ -875,7 +875,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
 
                 <div className="form-grid-2" style={{ marginTop: '1.5rem' }}>
                   <div className="form-group">
-                    <label className="form-label" htmlFor="medicamentos">Medicamentos contínuos</label>
+                    <label className="form-label" htmlFor="medicamentos">Medicamentos em Uso</label>
                     <textarea 
                       id="medicamentos"
                       className="form-textarea" 
@@ -887,7 +887,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="suplementos">Suplementos em uso</label>
+                    <label className="form-label" htmlFor="suplementos">Suplementos em Uso</label>
                     <textarea 
                       id="suplementos"
                       className="form-textarea" 
@@ -925,7 +925,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
               <div className="tab-pane">
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label className="form-label" htmlFor="refeicoes">Refeições por dia</label>
+                    <label className="form-label" htmlFor="refeicoes">Refeições por Dia</label>
                     <input 
                       type="number" 
                       id="refeicoes"
@@ -937,7 +937,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="agua">Quantidade de água por dia</label>
+                    <label className="form-label" htmlFor="agua">Consumo de Água (Litros/dia)</label>
                     <div className="input-with-suffix">
                       <input 
                         type="number" 
@@ -953,7 +953,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="acorda">Horário que acorda</label>
+                    <label className="form-label" htmlFor="acorda">Horário que Acorda</label>
                     <div className="input-with-icon">
                       <Clock size={18} color="#64748b" />
                       <input 
@@ -969,7 +969,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label" htmlFor="dorme">Horário que dorme</label>
+                    <label className="form-label" htmlFor="dorme">Horário que Dorme</label>
                     <div className="input-with-icon">
                       <Clock size={18} color="#64748b" />
                       <input 
@@ -986,7 +986,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                  <label className="form-label">Pratica atividade física?</label>
+                  <label className="form-label">Pratica Atividade Física?</label>
                   <div className="radio-group-pills">
                     <button
                       type="button"
@@ -1018,7 +1018,7 @@ export default function NovoPaciente({ user, isEdit = false }) {
                 </div>
 
                 <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                  <label className="form-label" htmlFor="observacoes">Observações gerais</label>
+                  <label className="form-label" htmlFor="observacoes">Observações Gerais</label>
                   <textarea 
                     id="observacoes"
                     className="form-textarea" 

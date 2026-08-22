@@ -738,7 +738,7 @@ export default function PacientePerfil({ user }) {
                     </span>
                   )}
                   {paciente.sexo && (
-                    <span className="profile-tag">
+                    <span className="profile-tag" style={{ textTransform: 'capitalize' }}>
                       <User size={14} /> {paciente.sexo}
                     </span>
                   )}
