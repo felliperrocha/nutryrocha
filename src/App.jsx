@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Pacientes from './pages/Pacientes';
 import NovoPaciente from './pages/NovoPaciente';
 import PacientePerfil from './pages/PacientePerfil';
+import Consultas from './pages/Consultas';
 import { authClient } from './lib/auth';
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -36,6 +37,10 @@ function App() {
           <Route 
             path="/pacientes" 
             element={user ? <Pacientes user={user} /> : <Navigate to="/login" replace />} 
+          />
+          <Route 
+            path="/consultas" 
+            element={user ? <Consultas user={user} /> : <Navigate to="/login" replace />} 
           />
           <Route 
             path="/pacientes/novo" 

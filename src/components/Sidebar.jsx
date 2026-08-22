@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, HeartPulse, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarDays, LogOut, HeartPulse, Moon, Sun } from 'lucide-react';
 import { authClient } from '../lib/auth';
 import { useTheme } from '../context/ThemeContext';
 
@@ -54,6 +54,14 @@ export default function Sidebar({ user }) {
         >
           <Users size={20} />
           <span>Pacientes</span>
+        </NavLink>
+
+        <NavLink 
+          to="/consultas" 
+          className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+        >
+          <CalendarDays size={20} />
+          <span>Consultas</span>
         </NavLink>
       </nav>
 
