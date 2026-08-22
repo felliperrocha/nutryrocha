@@ -185,7 +185,7 @@ export default function Dashboard({ user }) {
             </div>
 
             <div className="stat-card-body">
-              <h3 className="stat-title">Total de pacientes</h3>
+              <h3 className="stat-title">Total de Pacientes</h3>
               {loading ? (
                 <div className="skeleton skeleton-stat"></div>
               ) : (
@@ -203,7 +203,7 @@ export default function Dashboard({ user }) {
             </div>
           </div>
 
-          {/* Card 2 — Consultas da semana */}
+          {/* Card 2 — Consultas da Semana */}
           <div className="stat-card">
             <div className="stat-card-header">
               <div className="stat-icon-wrapper teal">
@@ -213,7 +213,7 @@ export default function Dashboard({ user }) {
             </div>
 
             <div className="stat-card-body">
-              <h3 className="stat-title">Consultas da semana</h3>
+              <h3 className="stat-title">Consultas da Semana</h3>
               {loading ? (
                 <div className="skeleton skeleton-stat"></div>
               ) : (
@@ -231,7 +231,7 @@ export default function Dashboard({ user }) {
             </div>
           </div>
 
-          {/* Card 3 — Pacientes sem retorno */}
+          {/* Card 3 — Pacientes sem Retorno */}
           <div className="stat-card stat-card-wide">
             <div className="stat-card-header">
               <div className="stat-header-group">
@@ -239,7 +239,7 @@ export default function Dashboard({ user }) {
                   <UserX size={24} />
                 </div>
                 <div>
-                  <h3 className="stat-title" style={{ fontSize: '1.15rem' }}>Pacientes sem retorno</h3>
+                  <h3 className="stat-title" style={{ fontSize: '1.15rem' }}>Pacientes sem Retorno</h3>
                   <p className="stat-description">
                     Última consulta há mais de 30 dias sem novo retorno agendado
                   </p>

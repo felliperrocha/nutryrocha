@@ -1,9 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, HeartPulse } from 'lucide-react';
+import { LayoutDashboard, Users, LogOut, HeartPulse, Moon, Sun } from 'lucide-react';
 import { authClient } from '../lib/auth';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Sidebar({ user }) {
   const navigate = useNavigate();
+  const { theme, toggleTheme, isDark } = useTheme();
 
   const handleLogout = async () => {
     try {
@@ -18,10 +20,22 @@ export default function Sidebar({ user }) {
   return (
     <aside className="app-sidebar">
       <div className="sidebar-brand">
-        <div className="sidebar-logo-icon">
-          <HeartPulse size={24} color="#00b4d8" />
+        <div className="sidebar-brand-left">
+          <div className="sidebar-logo-icon">
+            <HeartPulse size={24} color="#00b4d8" />
+          </div>
+          <span className="sidebar-brand-name">Nutry<span className="plus-sign">+</span></span>
         </div>
-        <span className="sidebar-brand-name">Nutry<span className="plus-sign">+</span></span>
+
+        <button 
+          type="button"
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          title={isDark ? "Mudar para modo claro" : "Mudar para modo escuro"}
+          aria-label="Alternar tema"
+        >
+          {isDark ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#64748b" />}
+        </button>
       </div>
 
       <nav className="sidebar-nav">

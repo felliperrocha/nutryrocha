@@ -6,6 +6,7 @@ import Pacientes from './pages/Pacientes';
 import NovoPaciente from './pages/NovoPaciente';
 import PacientePerfil from './pages/PacientePerfil';
 import { authClient } from './lib/auth';
+import { ThemeProvider } from './context/ThemeContext';
 
 function App() {
   const { data: session, isPending } = authClient.useSession();
@@ -17,46 +18,48 @@ function App() {
   const user = session?.user;
 
   return (
-    <Router>
-      <Routes>
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to="/dashboard" replace /> : <Login />} 
-        />
-        <Route 
-          path="/signup" 
-          element={user ? <Navigate to="/dashboard" replace /> : <Signup />} 
-        />
-        <Route 
-          path="/dashboard" 
-          element={user ? <Dashboard user={user} /> : <Navigate to="/login" replace />} 
-        />
-        <Route 
-          path="/pacientes" 
-          element={user ? <Pacientes user={user} /> : <Navigate to="/login" replace />} 
-        />
-        <Route 
-          path="/pacientes/novo" 
-          element={user ? <NovoPaciente user={user} /> : <Navigate to="/login" replace />} 
-        />
-        <Route 
-          path="/pacientes/:id/editar" 
-          element={user ? <NovoPaciente user={user} isEdit={true} /> : <Navigate to="/login" replace />} 
-        />
-        <Route 
-          path="/pacientes/:id" 
-          element={user ? <PacientePerfil user={user} /> : <Navigate to="/login" replace />} 
-        />
-        <Route 
-          path="/" 
-          element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
-        />
-        <Route 
-          path="*" 
-          element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
-        />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route 
+            path="/login" 
+            element={user ? <Navigate to="/dashboard" replace /> : <Login />} 
+          />
+          <Route 
+            path="/signup" 
+            element={user ? <Navigate to="/dashboard" replace /> : <Signup />} 
+          />
+          <Route 
+            path="/dashboard" 
+            element={user ? <Dashboard user={user} /> : <Navigate to="/login" replace />} 
+          />
+          <Route 
+            path="/pacientes" 
+            element={user ? <Pacientes user={user} /> : <Navigate to="/login" replace />} 
+          />
+          <Route 
+            path="/pacientes/novo" 
+            element={user ? <NovoPaciente user={user} /> : <Navigate to="/login" replace />} 
+          />
+          <Route 
+            path="/pacientes/:id/editar" 
+            element={user ? <NovoPaciente user={user} isEdit={true} /> : <Navigate to="/login" replace />} 
+          />
+          <Route 
+            path="/pacientes/:id" 
+            element={user ? <PacientePerfil user={user} /> : <Navigate to="/login" replace />} 
+          />
+          <Route 
+            path="/" 
+            element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
+          />
+          <Route 
+            path="*" 
+            element={<Navigate to={user ? "/dashboard" : "/login"} replace />} 
+          />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

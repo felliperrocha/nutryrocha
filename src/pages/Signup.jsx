@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Moon, Sun } from 'lucide-react';
 import { authClient } from '../lib/auth';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -10,6 +12,7 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -48,9 +51,20 @@ export default function Signup() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-logo">Nutry+</div>
-      <h2 className="auth-title">Crie sua conta</h2>
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '-1rem' }}>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="theme-toggle-btn"
+            title={isDark ? "Mudar para modo claro" : "Mudar para modo escuro"}
+          >
+            {isDark ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#64748b" />}
+          </button>
+        </div>
+        <div className="auth-logo">Nutry+</div>
+        <h2 className="auth-title">Crie sua conta</h2>
       
       {error && <div className="error-message">{error}</div>}
       
@@ -115,6 +129,7 @@ export default function Signup() {
       <Link to="/login" className="auth-link">
         Já tem conta? Faça login
       </Link>
+      </div>
     </div>
   );
 }
