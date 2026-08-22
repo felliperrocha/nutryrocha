@@ -20,7 +20,7 @@ export default function Sidebar({ user }) {
   return (
     <aside className="app-sidebar">
       <div className="sidebar-brand">
-        <div className="sidebar-brand-left">
+        <div className="sidebar-brand-left notranslate" translate="no">
           <div className="sidebar-logo-icon">
             <HeartPulse size={24} color="#00b4d8" />
           </div>
@@ -38,7 +38,7 @@ export default function Sidebar({ user }) {
         </button>
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav notranslate" translate="no">
         <div className="nav-section-title">Menu Principal</div>
         <NavLink 
           to="/dashboard" 
